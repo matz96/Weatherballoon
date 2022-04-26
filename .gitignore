@@ -4,3 +4,4 @@
 .vscode/launch.json
 .vscode/ipch
 pro4.code-workspace
+platformio.ini
