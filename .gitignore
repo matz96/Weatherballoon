@@ -4,4 +4,8 @@
 .vscode/launch.json
 .vscode/ipch
 pro4.code-workspace
+<<<<<<< HEAD
 platformio.ini
+=======
+platformio.ini
+>>>>>>> f366d013779850574459179fb3f9533e22d16846
