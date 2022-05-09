@@ -1,0 +1,33 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: arm-none-eabi-gcc.exe Aktive Datei kompilieren",
+            "command": "C:/Users/sabri/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-gcc.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "-mcpu=cortex-m0plus",
+                "-mthumb",
+                "-iprefixC:/Users/sabri/.platformio/packages/framework-arduino-mbed/cores/arduino",
+                "@C:/Users/sabri/.platformio/packages/framework-arduino-mbed/variants/RASPBERRY_PI_PICO/includes.txt",
+                ""
+            ],
+            "options": {
+                "cwd": "C:/Users/sabri/.platformio/packages/toolchain-gccarmnoneeabi/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Vom Debugger generierte Aufgabe."
+        }
+    ],
+    "version": "2.0.0"
+}
