@@ -5,80 +5,112 @@
 #include <Wire.h>
 #include "Adafruit_AS7341.h"
 
-
-using namespace std; 
+#define TCAADDR (0x70)
+#define MAX_SENS_VAL (59000) // about 10% below sensor max value
+#define FOURTYPERCENT (26215)
+using namespace std;
 ofstream file;
 
 Adafruit_AS7341 as7341;
-
-void init_sensor(){
-     if (!as7341.begin()){
+// TODO SMUX configuration
+void init_sensor()
+{
+  if (!as7341.begin())
+  {
     Serial.println("Could not find AS7341");
-    while (1) { delay(10); }
+    while (1)
+    {
+      delay(10);
+    }
   }
-    ifstream file("Sensordaten.txt");
-  if(!file.is_open()){
-   ofstream file("Sensordaten.txt");}
+  ifstream file("Sensordaten.txt");
+  if (!file.is_open())
+  {
+    ofstream file("Sensordaten.txt");
+  }
   as7341.setATIME(100);
   as7341.setASTEP(999);
   as7341.setGain(AS7341_GAIN_256X);
 }
 
-
-//TODO write GAIN function 
-void set_gain(){
+// Reduces gainlevel by half
+void reduce_gain()
+{
   
+  as7341.setGain(as7341.getGain()--);//TODO TYPE has to be ENUM, Casting
 }
 
+// Doubles gain level
+void double_gain()
+{
+  as7341.setGain((as7341_gain_t)(as7341.getGain()++));//TODO TYPE has to be ENUM, Casting
+}
 
-
-//TODO change function to write to log file 
-void read_sensors(){
-  uint16_t readings[12];
-  float counts[12];
-
-  if (!as7341.readAllChannels(readings)){
-    Serial.println("Error reading all channels!");
+// Changes the channel on the Multiplexer
+void tcaselect(uint8_t i)
+{
+  if (i > 7)
     return;
-  }
-  for(uint8_t i = 0; i < 12; i++) {
-    if(i == 4 || i == 5) continue;
-    // we skip the first set of duplicate clear/NIR readings
-    // (indices 4 and 5)
-    counts[i] = as7341.toBasicCounts(readings[i]);
-  }
 
-  Serial.print("ADC0/F1 415nm : ");
-  Serial.println(counts[0]);
-  Serial.print("ADC1/F2 445nm : ");
-  Serial.println(counts[1]);
-  Serial.print("ADC2/F3 480nm : ");
-  Serial.println(counts[2]);
-  Serial.print("ADC3/F4 515nm : ");
-  Serial.println(counts[3]);
-  Serial.print("ADC0/F5 555nm : ");
-
-  /* 
-  // we skip the first set of duplicate clear/NIR readings
-  Serial.print("ADC4/Clear-");
-  Serial.println(readings[4]);
-  Serial.print("ADC5/NIR-");
-  Serial.println(readings[5]);
-  */
-  
-  Serial.println(counts[6]);
-  Serial.print("ADC1/F6 590nm : ");
-  Serial.println(counts[7]);
-  Serial.print("ADC2/F7 630nm : ");
-  Serial.println(counts[8]);
-  Serial.print("ADC3/F8 680nm : ");
-  Serial.println(counts[9]);
-  Serial.print("ADC4/Clear    : ");
-  Serial.println(counts[10]);
-  Serial.print("ADC5/NIR      : ");
-  Serial.println(counts[11]);
-
-  Serial.println();
+  Wire.beginTransmission(TCAADDR);
+  Wire.write(1 << i);
+  Wire.endTransmission();
 }
 
+// TODO change function to write to log file
+//  Only use channel 0-3 & 6,7
+void read_sensors()
+{
+  uint16_t readings[12];
 
+  for (uint8_t j = 0; j < 6; j++)
+  {
+    tcaselect(j);
+    if (!as7341.readAllChannels(readings))
+    {
+      Serial.println("Error reading all channels!");
+      return;
+    }
+    bool is_ok = false;
+    u_int8_t underfourty = 0;
+
+    // checks if the sensors gain values are ok
+    for (uint8_t i = 0; i < 8; i++)
+    {
+      if (i == 4 || i == 5)
+        continue;
+      // we skip the first set of duplicate clear/NIR readings
+      // (indices 4 and 5)
+      if (readings[i] >= MAX_SENS_VAL)
+      { // if bigger than 15 bit gain shifts down
+        reduce_gain();
+        j--;
+        break;
+      }
+      else if (readings[i] <= FOURTYPERCENT)
+      {
+        underfourty++;
+      }
+      if (underfourty == 6)
+      {
+        double_gain();
+        j--;
+        break;
+      }
+      if (i = 7)
+      {
+        is_ok = true;
+      }
+    }
+
+    //TODO writes data to text file one sensor at a time
+    if (is_ok)
+    {
+      for (uint8_t i = 0; i < 8; i++)
+      {
+        if (i == 4 || i == 5)
+          continue;
+      }
+    }
+  }
+}
