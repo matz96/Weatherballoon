@@ -1,14 +1,15 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "Arduino.h"
+#include <Arduino.h>
 #include <Wire.h>
-#include "Adafruit_AS7341.h"
+#include <Adafruit_AS7341.h>
 
 #define TCAADDR (0x70)
 #define MAX_SENS_VAL (59000) // about 10% below sensor max value
 #define FOURTYPERCENT (26215)
 using namespace std;
+
 ofstream file;
 
 Adafruit_AS7341 as7341;
@@ -134,7 +135,7 @@ void read_sensors()
         j--;
         break;
       }
-      if (i = 7)
+      if (i == 7)
       {
         is_ok = true;
       }
@@ -153,7 +154,7 @@ void read_sensors()
       if (j % 2)
       {
         gain2 = as7341.getGain();
-        gain2 << 4;
+        (gain2 << 4);
         gain = gain + gain2;
         write_Gain_Data(gain);
         gain = 0;

@@ -1,14 +1,17 @@
 #include <Arduino.h>
-#include <Adafruit_AS7341.h>
+
 #include <sensor.h>
-Adafruit_AS7341 as7341;
+
+
 
 //SDA = GPIO PIN12
 //SDL = GPIO PIN13
 void setup()
 {
-  // put your setup code here, to run once:
+ 
+ Serial.begin(9600);
  void init_sensor();
+  Serial.println("Hello Word");
 
 }
 
