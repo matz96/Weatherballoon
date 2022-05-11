@@ -12,7 +12,7 @@ using namespace std;
 ofstream file;
 
 Adafruit_AS7341 as7341;
-// TODO SMUX configuration
+
 void init_sensor()
 {
   if (!as7341.begin())
@@ -36,14 +36,14 @@ void init_sensor()
 // Reduces gainlevel by half
 void reduce_gain()
 {
-  
-  as7341.setGain(as7341.getGain()--);//TODO TYPE has to be ENUM, Casting
+
+  as7341.setGain((as7341_gain_t)((int)(as7341.getGain()) - 1));
 }
 
 // Doubles gain level
 void double_gain()
 {
-  as7341.setGain((as7341_gain_t)(as7341.getGain()++));//TODO TYPE has to be ENUM, Casting
+  as7341.setGain((as7341_gain_t)((int)(as7341.getGain()) + 1));
 }
 
 // Changes the channel on the Multiplexer
@@ -57,16 +57,53 @@ void tcaselect(uint8_t i)
   Wire.endTransmission();
 }
 
+void write_Sensor_Data(uint16_t Data)
+{
+  file.open("Sensordaten.txt");
+  file << Data;
+  file.close();
+
+}
+
+void write_Gain_Data(uint8_t Data)
+{
+  file.open("Sensordaten.txt");
+  file << Data;
+  file.close();
+
+}
+
+void write_others_Data(uint16_t Data)
+{
+  file.open("Sensordaten.txt");
+  file << Data;
+  file.close();
+
+}
+
+void write_line_end()
+{
+  file.open("Sensordaten.txt");
+  file << "\n";
+  file.close();
+
+}
+
+
+
 // TODO change function to write to log file
 //  Only use channel 0-3 & 6,7
 void read_sensors()
 {
   uint16_t readings[12];
+  uint8_t gain = 0;
+  uint8_t gain2 = 0;
 
   for (uint8_t j = 0; j < 6; j++)
   {
-    tcaselect(j);
-    if (!as7341.readAllChannels(readings))
+
+    tcaselect(j);                          // Sets the MUX to the j-th sensor
+    if (!as7341.readAllChannels(readings)) // Reads all sensors and sets the SMUX the one in the Sensor
     {
       Serial.println("Error reading all channels!");
       return;
@@ -82,7 +119,7 @@ void read_sensors()
       // we skip the first set of duplicate clear/NIR readings
       // (indices 4 and 5)
       if (readings[i] >= MAX_SENS_VAL)
-      { // if bigger than 15 bit gain shifts down
+      { // if bigger than MAX_SENS_VAL gain shifts down
         reduce_gain();
         j--;
         break;
@@ -103,13 +140,27 @@ void read_sensors()
       }
     }
 
-    //TODO writes data to text file one sensor at a time
+    // TODO writes data to text file one Measured frequency at a time
     if (is_ok)
     {
       for (uint8_t i = 0; i < 8; i++)
       {
         if (i == 4 || i == 5)
           continue;
+        write_Sensor_Data(readings[i]);
+      }
+      //writes the gains of two sensors into one uin8_t to save space
+      if (j % 2)
+      {
+        gain2 = as7341.getGain();
+        gain2 << 4;
+        gain = gain + gain2;
+        write_Gain_Data(gain);
+        gain = 0;
+        gain2 = 0;
+      }
+      else{
+        gain = as7341.getGain();
       }
     }
   }
