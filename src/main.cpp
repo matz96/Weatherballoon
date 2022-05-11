@@ -18,7 +18,7 @@ void setup()
 void loop()
 {
 
-  //TODO change sensor on mux
+  
   void read_sensors();  
   // add sleep
   
