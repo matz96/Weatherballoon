@@ -144,7 +144,6 @@ void read_sensors()
     // TODO writes data to text file one Measured frequency at a time
     if (is_ok)
     {
-      gain = as7341.getGain();
       for (uint8_t i = 0; i < 8; i++)
       {
         if (i == 4 || i == 5)
