@@ -10,7 +10,7 @@ void setup()
 {
  
  Serial.begin(9600);
- void init_sensor();
+  init_sensor();
   Serial.println("Hello Word");
 
 }
@@ -22,7 +22,7 @@ void loop()
 {
 
   
-  void read_sensors();  
+  read_sensors();  
   // add sleep
   
 
