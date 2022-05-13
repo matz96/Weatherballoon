@@ -40,7 +40,16 @@ void setup()
 
 void loop()
 {
+  Serial.println("Sending to rf95_server");
+  // Send a message to rf95_server
+  uint8_t data[] = "Hello World!";
+  rf95.send(data, sizeof(data));
   
+  //rf95.waitPacketSent();
+
+  delay(400);
 }
+
+
 
 
