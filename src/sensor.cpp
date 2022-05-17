@@ -11,11 +11,11 @@
 using namespace std;
 
 ofstream file;
-
 Adafruit_AS7341 as7341;
-
+void dump_data();
 void init_sensor()
 {
+  
   if (!as7341.begin())
   {
     Serial.println("Could not find AS7341");
@@ -24,15 +24,24 @@ void init_sensor()
       delay(10);
     }
   }
-  ifstream file("Sensordaten.txt");
+  Serial.println("AS7341 enabled");
+
+  /* ifstream file("Sensordaten.txt");
   if (!file.is_open())
   {
     ofstream file("Sensordaten.txt");
-  }
+   */
   as7341.setATIME(100);
   as7341.setASTEP(999);
-  as7341.setGain(AS7341_GAIN_256X);
+  as7341.setGain(AS7341_GAIN_2X);
 }
+
+/* void dum_data(){
+  for(file);
+  Serial.println(); 
+
+
+} */
 
 // Reduces gainlevel by half
 void reduce_gain()
@@ -58,26 +67,28 @@ void tcaselect(uint8_t i)
   Wire.endTransmission();
 }
 
-void write_Sensor_Data(uint16_t Data)
+void write_Sensor_Data(uint16_t data)
 {
   file.open("Sensordaten.txt");
-  file << Data;
+  file << data;
   file.close();
+  Serial.println(data);
 
 }
 
-void write_Gain_Data(uint8_t Data)
+void write_Gain_Data(uint8_t data)
 {
   file.open("Sensordaten.txt");
-  file << Data;
+  file << data;
   file.close();
+  Serial.println(data);
 
 }
 
-void write_others_Data(uint16_t Data)
+void write_others_Data(uint16_t data)
 {
   file.open("Sensordaten.txt");
-  file << Data;
+  file << data;
   file.close();
 
 }
@@ -92,10 +103,11 @@ void write_line_end()
 
 
 
-// TODO change function to write to log file
-//  Only use channel 0-3 & 6,7
+
+//  Only uses channel 0-3 & 6,7
 void read_sensors()
 {
+  Serial.println("sens");
   uint16_t readings[12];
   uint8_t gain = 0;
   uint8_t gain2 = 0;
@@ -103,7 +115,7 @@ void read_sensors()
   for (uint8_t j = 0; j < 6; j++)
   {
 
-    tcaselect(j);                          // Sets the MUX to the j-th sensor
+    //tcaselect(j);                          // Sets the MUX to the j-th sensor
     if (!as7341.readAllChannels(readings)) // Reads all sensors and sets the SMUX the one in the Sensor
     {
       Serial.println("Error reading all channels!");
