@@ -16,12 +16,15 @@ void dump_data();
 void init_sensor()
 {
   
+ 
+  
   if (!as7341.begin())
   {
     Serial.println("Could not find AS7341");
     while (1)
     {
       delay(10);
+      
     }
   }
   Serial.println("AS7341 enabled");
