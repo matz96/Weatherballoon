@@ -29,16 +29,16 @@ void setup() {
 
 // cppcheck-suppress unusedFunction
 void loop() {
-  delay(50000);
+  delay(5000);
   digitalWrite(LEDFunk,HIGH);
 
   APRSMessage msg;
   //String      lat = "47.50979253564977";
   //String      lng = "7.620736862914847";
-  String      lat = "47.5097";
-  String      lng = "7.6207";
+  String      lat = "4737.31";
+  String      lng = "00736.47";
   String      alt = "530";
-  msg.setSource("HB9DKQ");
+  msg.setSource("HB9DKQ-01");
   msg.setPath("WIDE1-1");
   msg.setDestination("APLT00"); 
 
