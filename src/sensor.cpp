@@ -1,21 +1,29 @@
 #include <iostream>
 #include <fstream>
+#include <filesystem.h>
 #include <string>
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_AS7341.h>
 
+
+
+
+#define FORCE_REFORMAT          false
 #define TCAADDR (0x70)
 #define MAX_SENS_VAL (59000) // about 10% below sensor max value
 #define FOURTYPERCENT (26215)
 using namespace std;
 
-ofstream file;
+const char filename[] = "Sensordaten.txt";
+
 Adafruit_AS7341 as7341;
 void dump_data();
 void init_sensor()
 {
-  
+  writeFile(filename,"Hello World",12);
+  readFile(filename);
+ 
  
   
   if (!as7341.begin())
@@ -72,35 +80,37 @@ void tcaselect(uint8_t i)
 
 void write_Sensor_Data(uint16_t data)
 {
-  file.open("Sensordaten.txt");
-  file << data;
-  file.close();
-  Serial.println(data);
+  char datachar[2];
+
+  datachar[1] = data & 0xFF;
+
+  datachar[0] = data >> 8;
+  
+  appendFile(filename,datachar,2);
 
 }
 
 void write_Gain_Data(uint8_t data)
-{
-  file.open("Sensordaten.txt");
-  file << data;
-  file.close();
-  Serial.println(data);
-
+{char datachar = data;
+  appendFile(filename,&datachar,1);
 }
 
 void write_others_Data(uint16_t data)
 {
-  file.open("Sensordaten.txt");
-  file << data;
-  file.close();
+  char datachar[2];
+
+  datachar[1] = data & 0xFF;
+
+  datachar[0] = data >> 8;
+  
+  appendFile(filename,datachar,2);
+
 
 }
 
 void write_line_end()
-{
-  file.open("Sensordaten.txt");
-  file << "\n";
-  file.close();
+{ char datachar = '\n';
+  appendFile(filename,&datachar,2);
 
 }
 
