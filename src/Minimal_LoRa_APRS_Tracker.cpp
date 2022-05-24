@@ -29,21 +29,21 @@ void setup() {
 
 // cppcheck-suppress unusedFunction
 void loop() {
-  delay(5000);
+  delay(120000);
   digitalWrite(LEDFunk,HIGH);
 
   APRSMessage msg;
   //String      lat = "47.50979253564977";
   //String      lng = "7.620736862914847";
-  String      lat = "4737.31";
-  String      lng = "00736.47";
+  String      lat = "4737.32";
+  String      lng = "00736.48";
   String      alt = "530";
-  msg.setSource("HB9DKQ-01");
+  msg.setSource("HB9DKQ-03");
   msg.setPath("WIDE1-1");
   msg.setDestination("APLT00"); 
 
   String aprsmsg;
-  aprsmsg = "!" + lat + "N/" + lng + "E>";
+  aprsmsg = "!" + lat + "N/" + lng + "EO";
 
   msg.getAPRSBody()->setData(aprsmsg);
   String data = msg.encode();
@@ -63,7 +63,7 @@ void loop() {
 
 
 void setup_lora() {
-  delay(10000);
+  delay(5000);
   Serial.println("Set SPI pins!");
   SPI.begin();
   Serial.println("Set LoRa pins!");
