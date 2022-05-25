@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_AS7341.h>
-
+#include <LittleFS_Mbed_RP2040.h>
 
 
 
@@ -15,13 +15,14 @@
 #define FOURTYPERCENT (26215)
 using namespace std;
 
-const char filename[] = "Sensordaten.txt";
+char filename[] = MBED_LITTLEFS_FILE_PREFIX "/Sensordaten.txt";
 
 Adafruit_AS7341 as7341;
 void dump_data();
 void init_sensor()
 {
-  writeFile(filename,"Hello World",12);
+  setupLFS();
+  writeFile(filename,"start",6);
   readFile(filename);
  
  
@@ -120,7 +121,7 @@ void write_line_end()
 //  Only uses channel 0-3 & 6,7
 void read_sensors()
 {
-  Serial.println("sens");
+ 
   uint16_t readings[12];
   uint8_t gain = 0;
   uint8_t gain2 = 0;

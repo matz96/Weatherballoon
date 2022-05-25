@@ -197,11 +197,91 @@ void testFileIO(const char * path)
   }
 }
 
+void deleteFile(const char * path) 
+{
+  Serial.print("Deleting file: "); Serial.print(path);
+  
+  if (remove(path) == 0) 
+  {
+    Serial.println(" => OK");
+  }
+  else
+  {
+    Serial.println(" => Failed");
+    return;
+  }
+}
+
+
+
 void printLine()
 {
   Serial.println("====================================================");
 }
 
+void setupLFS() 
+{
+  //Serial.begin(115200);
+  while (!Serial)
 
+  delay(1000);
+
+  Serial.print("\nStart LittleFS_Test on "); Serial.println(BOARD_NAME);
+  Serial.println(LFS_MBED_RP2040_VERSION);
+  
+#if defined(LFS_MBED_RP2040_VERSION_MIN)
+  if (LFS_MBED_RP2040_VERSION_INT < LFS_MBED_RP2040_VERSION_MIN)
+  {
+    Serial.print("Warning. Must use this example on Version equal or later than : ");
+    Serial.println(LFS_MBED_RP2040_VERSION_MIN_TARGET);
+  }
+#endif
+
+  myFS = new LittleFS_MBED();
+
+  if (!myFS->init()) 
+  {
+    Serial.println("LITTLEFS Mount Failed");
+    
+    return;
+  }
+
+  /* char fileName1[] = MBED_LITTLEFS_FILE_PREFIX "/hello1.txt";
+  //char fileName2[] = MBED_LITTLEFS_FILE_PREFIX "/hello2.txt";
+  
+  char message[]  = "Hello from " BOARD_NAME "\n";
+  
+  printLine();
+  writeFile(fileName1, message, sizeof(message));
+  printLine();
+  readFile(fileName1);
+  printLine();
+
+  appendFile(fileName1, message, sizeof(message));
+  printLine();
+  readFile(fileName1);
+  printLine();
+
+ /*  renameFile(fileName1, fileName2);
+  printLine();
+  readCharsFromFile(fileName2);
+  printLine(); */
+
+  /* deleteFile(fileName2);
+  printLine();
+  readFile(fileName2);
+  printLine(); */
+/*
+  testFileIO(fileName1);
+  printLine();
+  /* testFileIO(fileName2);
+  printLine(); */
+  /*deleteFile(fileName1);
+  printLine();
+  /* deleteFile(fileName2);
+  printLine(); */
+
+  /*Serial.println( "\nTest complete" ); */
+}
 
 
