@@ -47,7 +47,7 @@ void writeFile(const char * path, const char * message, size_t messageSize)
   Serial.print("Writing file: "); Serial.print(path);
 
   FILE *file = fopen(path, "w");
-  
+  Serial.print("problem to open");
   if (file) 
   {
     Serial.println(" => Open OK");
@@ -246,10 +246,10 @@ void setupLFS()
     return;
   }
 
-  /* char fileName1[] = MBED_LITTLEFS_FILE_PREFIX "/hello1.txt";
+  char fileName1[] = MBED_LITTLEFS_FILE_PREFIX "/hello1.txt";
   //char fileName2[] = MBED_LITTLEFS_FILE_PREFIX "/hello2.txt";
   
-  char message[]  = "Hello from " BOARD_NAME "\n";
+  char message[]  = "start";
   
   printLine();
   writeFile(fileName1, message, sizeof(message));
@@ -257,10 +257,10 @@ void setupLFS()
   readFile(fileName1);
   printLine();
 
-  appendFile(fileName1, message, sizeof(message));
+  /* appendFile(fileName1, message, sizeof(message));
   printLine();
   readFile(fileName1);
-  printLine();
+  printLine(); */
 
  /*  renameFile(fileName1, fileName2);
   printLine();

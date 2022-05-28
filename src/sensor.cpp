@@ -15,14 +15,16 @@
 #define FOURTYPERCENT (26215)
 using namespace std;
 
-char filename[] = MBED_LITTLEFS_FILE_PREFIX "/Sensordaten.txt";
+char filename[] = MBED_LITTLEFS_FILE_PREFIX "/hello1.txt"; 
 
 Adafruit_AS7341 as7341;
 void dump_data();
 void init_sensor()
 {
   setupLFS();
-  writeFile(filename,"start",6);
+  char test_message[] = "start";
+
+  //writeFile(filename,test_message,sizeof(test_message));
   readFile(filename);
  
  
