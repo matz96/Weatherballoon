@@ -33,7 +33,7 @@ void init_sensor()
   if (!as7341.begin())
   {
     Serial.println("Could not find AS7341");
-    while (1)
+    while (!as7341.begin())
     {
       delay(10);
       
@@ -195,7 +195,7 @@ void read_sensors()
       else{
         gain = as7341.getGain();
       }
-      if(j = 5){
+      if(j == 5){
         write_line_end();
       }
     }
