@@ -13,16 +13,15 @@
 #define TCAADDR (0x70)
 #define MAX_SENS_VAL (59000) // about 10% below sensor max value
 #define FOURTYPERCENT (26215)
-using namespace std;
+//using namespace std;
 
-char filename[] = MBED_LITTLEFS_FILE_PREFIX "/hello1.txt"; 
-
+const char filename[] = "/hello.txt";
 Adafruit_AS7341 as7341;
 void dump_data();
 void init_sensor()
 {
   setupLFS();
-  char test_message[] = "start";
+  char test_message[] = "start\0";
 
   //writeFile(filename,test_message,sizeof(test_message));
   readFile(filename);

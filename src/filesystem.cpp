@@ -2,7 +2,7 @@
 #define LFS_MBED_RP2040_VERSION_MIN             1001000
 
 #define _LFS_LOGLEVEL_          1
-#define RP2040_FS_SIZE_KB       1536
+#define RP2040_FS_SIZE_KB       1024
 
 #define FORCE_REFORMAT          false
 
@@ -44,10 +44,12 @@ void readFile(const char * path)
 
 void writeFile(const char * path, const char * message, size_t messageSize) 
 {
-  Serial.print("Writing file: "); Serial.print(path);
-
+  Serial.print("Writing file:    "); Serial.println(path);
+  Serial.print("Writing message: "); Serial.println(message);
+  Serial.print("With size:       "); Serial.println(messageSize);
+  
   FILE *file = fopen(path, "w");
-  Serial.print("problem to open");
+  
   if (file) 
   {
     Serial.println(" => Open OK");
@@ -222,9 +224,6 @@ void printLine()
 void setupLFS() 
 {
   //Serial.begin(115200);
-  while (!Serial)
-
-  delay(1000);
 
   Serial.print("\nStart LittleFS_Test on "); Serial.println(BOARD_NAME);
   Serial.println(LFS_MBED_RP2040_VERSION);
@@ -246,10 +245,10 @@ void setupLFS()
     return;
   }
 
-  char fileName1[] = MBED_LITTLEFS_FILE_PREFIX "/hello1.txt";
+  char fileName1[] = MBED_LITTLEFS_FILE_PREFIX "/helloTESTITEST.txt";
   //char fileName2[] = MBED_LITTLEFS_FILE_PREFIX "/hello2.txt";
   
-  char message[]  = "start";
+  char message[]  = "Hello World!";
   
   printLine();
   writeFile(fileName1, message, sizeof(message));
@@ -262,26 +261,7 @@ void setupLFS()
   readFile(fileName1);
   printLine(); */
 
- /*  renameFile(fileName1, fileName2);
-  printLine();
-  readCharsFromFile(fileName2);
-  printLine(); */
 
-  /* deleteFile(fileName2);
-  printLine();
-  readFile(fileName2);
-  printLine(); */
-/*
-  testFileIO(fileName1);
-  printLine();
-  /* testFileIO(fileName2);
-  printLine(); */
-  /*deleteFile(fileName1);
-  printLine();
-  /* deleteFile(fileName2);
-  printLine(); */
-
-  /*Serial.println( "\nTest complete" ); */
 }
 
 
