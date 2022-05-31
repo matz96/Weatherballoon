@@ -2,7 +2,7 @@
 #define LFS_MBED_RP2040_VERSION_MIN             1001000
 
 #define _LFS_LOGLEVEL_          1
-#define RP2040_FS_SIZE_KB       1024
+#define RP2040_FS_SIZE_KB       1536
 
 #define FORCE_REFORMAT          false
 
@@ -245,7 +245,7 @@ void setupLFS()
     return;
   }
 
-  char fileName1[] = MBED_LITTLEFS_FILE_PREFIX "/helloTESTITEST.txt";
+  /* char fileName1[] = MBED_LITTLEFS_FILE_PREFIX "/helloTESTITEST.txt";
   //char fileName2[] = MBED_LITTLEFS_FILE_PREFIX "/hello2.txt";
   
   char message[]  = "Hello World!";
@@ -254,7 +254,7 @@ void setupLFS()
   writeFile(fileName1, message, sizeof(message));
   printLine();
   readFile(fileName1);
-  printLine();
+  printLine(); */
 
   /* appendFile(fileName1, message, sizeof(message));
   printLine();

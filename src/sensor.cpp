@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_AS7341.h>
-#include <LittleFS_Mbed_RP2040.h>
+
 
 
 
@@ -15,15 +15,15 @@
 #define FOURTYPERCENT (26215)
 //using namespace std;
 
-const char filename[] = "/hello.txt";
+const char filename[] = "/littlefs/log.txt";
 Adafruit_AS7341 as7341;
-void dump_data();
+//void dump_data();
 void init_sensor()
 {
   setupLFS();
-  char test_message[] = "start\0";
+  char test_message[] = "start\n";
 
-  //writeFile(filename,test_message,sizeof(test_message));
+  writeFile(filename,test_message,sizeof(test_message));
   readFile(filename);
  
  
