@@ -1,42 +1,38 @@
+
 #include <Arduino.h>
+
+#include <sensor.h>
+
+
+
+//SDA1 = GPIO PIN12
+//SCL1 = GPIO PIN13
+//SDA2 = GPIO PIN14
+//SCL2 = GPIO PIN15
 
 void setup()
 {
-  // put your setup code here, to run once:
-  pinMode(0, INPUT);
-  pinMode(10, INPUT);
-  for (int i = 1; i < 5; i++)
-  {
-    pinMode(i, OUTPUT);
-  }
+ 
+ 
+ Serial.begin(9600);
+ delay(10000);
+ //Serial.println("Hello Word");
+  init_sensor();
+  
+
 }
+
+
+
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
-  static long unsigned lastMillis = millis();
-  static bool firstRun = true;
-  static int i;
-
-  if (firstRun)
-  {
-
-    firstRun = false;
-    lastMillis = millis();
-    i = 1;
-  }
+  //Serial.println("loop");
   
-  if (lastMillis + 1000 < millis())
-  {
-    lastMillis = millis();
-    digitalWrite(i , digitalRead(0));
-    digitalWrite((i-1) , digitalRead(10));
-    if (i==1){
-      digitalWrite((4) , digitalRead(10));
-    }
-    i++;
-    if(i==5){
-      i=1;
-    }
-  }
+ read_sensors();  
+  // add sleep
+  sleep_ms(990);
+
+
+
 }
