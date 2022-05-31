@@ -27,7 +27,7 @@ void setup()
 
 void loop()
 {
-  //Serial.println("loop");
+  Serial.println("loop");
   
  read_sensors();  
   // add sleep

@@ -21,10 +21,12 @@ Adafruit_AS7341 as7341;
 void init_sensor()
 {
   setupLFS();
-  char test_message[] = "start\n";
-
-  writeFile(filename,test_message,sizeof(test_message));
+  char test_message[] = "start\n"; 
+  char end_message[] = "stop\n";
+  appendFile(filename,end_message,sizeof(end_message));
   readFile(filename);
+  //writeFile(filename,test_message,sizeof(test_message));
+ 
  
  
   
@@ -165,16 +167,19 @@ void read_sensors()
       if (i == 7)
       {
         is_ok = true;
+        Serial.println("reading,gain ok");
       }
     }
+    
 
     // TODO writes data to text file one Measured frequency at a time
     if (is_ok)
     {
       for (uint8_t i = 0; i < 8; i++)
       {
-        if (i == 4 || i == 5)
-          continue;
+        if (i == 4 || i == 5){
+          continue;}
+        
         write_Sensor_Data(readings[i]);
       }
       //writes the gains of two sensors into one uin8_t to save space
@@ -189,6 +194,9 @@ void read_sensors()
       }
       else{
         gain = as7341.getGain();
+      }
+      if(j = 5){
+        write_line_end();
       }
     }
   }
