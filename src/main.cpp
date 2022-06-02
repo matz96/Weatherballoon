@@ -1,7 +1,7 @@
 
 #include <Arduino.h>
-#include <lora.h>
 #include <sensor.h>
+#include "lora_pro4.h"
 
 int count = 0;
 
@@ -32,7 +32,8 @@ void loop()
  count ++;
   // add sleep
   sleep_ms(990);
-  if(count ==120){
+  if(count == 120){
     lora_send();
+    count = 0; 
   }
 }

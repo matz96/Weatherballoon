@@ -1,5 +1,6 @@
 #include <APRS-Decoder.h>
 #include <Arduino.h>
+#include "lora_pro4.h"
 #include <LoRa.h>
 
 #define LORA_SCK 18
@@ -10,9 +11,6 @@
 #define LORA_IRQ 7 //15
 #define LEDPower 26 //Pin des Raspberrys GIPO20
 #define LEDFunk 27 //Pin des Raspberrys GIPO21
-
-
-
 
 
 

@@ -8,7 +8,7 @@
 
 
 
-
+#define MAX_TRIES_SENSOR_BEGIN (5)
 #define FORCE_REFORMAT          false
 #define TCAADDR (0x70)
 #define MAX_SENS_VAL (59000) // about 10% below sensor max value
@@ -18,6 +18,8 @@
 const char filename[] = "/littlefs/log.txt";
 Adafruit_AS7341 as7341;
 //void dump_data();
+
+
 void init_sensor()
 {
   setupLFS();
@@ -31,13 +33,16 @@ void init_sensor()
  
   
   if (!as7341.begin())
-  {
-    Serial.println("Could not find AS7341");
-    while (!as7341.begin())
+  { 
+    uint8_t maxTriesReached = 0; //reset the maxTriesReached
+    
+    while (!as7341.begin()||!(maxTriesReached >= MAX_TRIES_SENSOR_BEGIN))
     {
-      delay(10);
+      maxTriesReached++;
+      delay(100);
       
     }
+    Serial.println("Could not find AS7341 multiple times...");
   }
   Serial.println("AS7341 enabled");
 
@@ -132,7 +137,7 @@ void read_sensors()
   for (uint8_t j = 0; j < 6; j++)
   {
 
-    //tcaselect(j);                          // Sets the MUX to the j-th sensor
+    tcaselect(j);                          // Sets the MUX to the j-th sensor
     if (!as7341.readAllChannels(readings)) // Reads all sensors and sets the SMUX the one in the Sensor
     {
       Serial.println("Error reading all channels!");
