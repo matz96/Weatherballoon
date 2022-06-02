@@ -181,7 +181,7 @@ void read_sensors(char * datastring)
           continue;}
         
         write_Sensor_Data(readings[i],datastring,p);
-        p++;
+        p=p+2;
       }
       //writes the gains of two sensors into one uin8_t to save space
       if (j % 2)
