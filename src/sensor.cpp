@@ -28,11 +28,7 @@ void init_sensor()
   appendFile(filename,end_message,sizeof(end_message));
   readFile(filename); */
   //writeFile(filename,test_message,sizeof(test_message));
- 
- 
- 
-  
-  if (!as7341.begin())
+ if (!as7341.begin())
   { 
     uint8_t maxTriesReached = 0; //reset the maxTriesReached
     
@@ -46,14 +42,12 @@ void init_sensor()
   }
   Serial.println("AS7341 enabled");
 
-  /* ifstream file("Sensordaten.txt");
-  if (!file.is_open())
-  {
-    ofstream file("Sensordaten.txt");
-   */
+  
   as7341.setATIME(100);
   as7341.setASTEP(999);
-  as7341.setGain(AS7341_GAIN_2X);
+  as7341.setGain(AS7341_GAIN_2X); 
+  
+  
 }
 
 /* void dum_data(){
@@ -133,11 +127,12 @@ void read_sensors(char * datastring)
   uint16_t readings[12];
   uint8_t gain = 0;
   uint8_t gain2 = 0;
-
+  int16_t p = 0;
   for (uint8_t j = 0; j < 6; j++)
-  { int p = 0;
+  { 
 
-    tcaselect(j);                          // Sets the MUX to the j-th sensor
+    tcaselect(j);        // Sets the MUX to the j-th sensor
+    init_sensor();      // initializes the current sensor
     if (!as7341.readAllChannels(readings)) // Reads all sensors and sets the SMUX the one in the Sensor
     {
       Serial.println("Error reading all channels!");
@@ -185,7 +180,8 @@ void read_sensors(char * datastring)
         if (i == 4 || i == 5){
           continue;}
         
-        write_Sensor_Data(readings[i],datastring,j);
+        write_Sensor_Data(readings[i],datastring,p);
+        p++;
       }
       //writes the gains of two sensors into one uin8_t to save space
       if (j % 2)
@@ -193,7 +189,8 @@ void read_sensors(char * datastring)
         gain2 = as7341.getGain();
         (gain << 4);
         gain = gain + gain2;
-        write_Gain_Data(gain);
+        write_Gain_Data(gain, datastring,p);
+        p++;
         gain = 0;
         gain2 = 0;
       }
