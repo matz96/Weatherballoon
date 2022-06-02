@@ -22,11 +22,11 @@ Adafruit_AS7341 as7341;
 
 void init_sensor()
 {
-  setupLFS();
+  /* setupLFS();
   char test_message[] = "start\n"; 
   char end_message[] = "stop\n";
   appendFile(filename,end_message,sizeof(end_message));
-  readFile(filename);
+  readFile(filename); */
   //writeFile(filename,test_message,sizeof(test_message));
  
  
@@ -87,21 +87,21 @@ void tcaselect(uint8_t i)
   Wire.endTransmission();
 }
 
-void write_Sensor_Data(uint16_t data)
+void write_Sensor_Data(uint16_t data, char * datastring, int p)
 {
-  char datachar[2];
-
-  datachar[1] = data & 0xFF;
-
-  datachar[0] = data >> 8;
   
-  appendFile(filename,datachar,2);
+
+  datastring[p+1] = data & 0xFF;
+
+  datastring[p] =  data >> 8;
+  
+  
 
 }
 
-void write_Gain_Data(uint8_t data)
-{char datachar = data;
-  appendFile(filename,&datachar,1);
+void write_Gain_Data(uint8_t data, char * datastring, int p)
+{
+ datastring[p]=data;
 }
 
 void write_others_Data(uint16_t data)
@@ -127,7 +127,7 @@ void write_line_end()
 
 
 //  Only uses channel 0-3 & 6,7
-void read_sensors()
+void read_sensors(char * datastring)
 {
  
   uint16_t readings[12];
@@ -135,7 +135,7 @@ void read_sensors()
   uint8_t gain2 = 0;
 
   for (uint8_t j = 0; j < 6; j++)
-  {
+  { int p = 0;
 
     tcaselect(j);                          // Sets the MUX to the j-th sensor
     if (!as7341.readAllChannels(readings)) // Reads all sensors and sets the SMUX the one in the Sensor
@@ -185,7 +185,7 @@ void read_sensors()
         if (i == 4 || i == 5){
           continue;}
         
-        write_Sensor_Data(readings[i]);
+        write_Sensor_Data(readings[i],datastring,j);
       }
       //writes the gains of two sensors into one uin8_t to save space
       if (j % 2)

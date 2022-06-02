@@ -5,7 +5,7 @@
 public: */
 void init_sensor();
 
-void read_sensors();
+void read_sensors(char * data);
 void write_others_Data();
 void write_line_end();
 
