@@ -1,4 +1,4 @@
-import numpy as np
+
 
 
 
@@ -45,8 +45,9 @@ def file_write():
                 line = gain_out
     
         others_out(line)  
-        file2.write("\n")       
-    
+        file2.write("\n") 
+        file1.close()      
+        file2.close()
     
     
     
