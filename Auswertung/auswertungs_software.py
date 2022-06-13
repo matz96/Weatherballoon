@@ -7,6 +7,7 @@ from cProfile import label
 import struct
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 from typing import Dict
 data = {}
 
@@ -102,9 +103,10 @@ file=file1.read(-1) #writes whole file into string
 file1.close()    
 Sensors = ["GPS_long","GPS_lat","GPS_height","Bar_pre","Bar_temp","Bar_height","mag_x","mag_y","mag_z","heading","Temp_out"]
 mark = 0
-line_width = 103
+line_width = 100
 line_nr=0
-
+if file[line_width!= 'ff']:
+    sys.exit("linewidth does not match with data")
 while file[mark+1] != '' :
     
     line=file[mark:(mark+line_width)]
