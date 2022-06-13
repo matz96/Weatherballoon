@@ -105,8 +105,8 @@ Sensors = ["GPS_long","GPS_lat","GPS_height","Bar_pre","Bar_temp","Bar_height","
 mark = 0
 line_width = 100
 line_nr=0
-if file[line_width!= 'ff']:
-    sys.exit("linewidth does not match with data")
+''' if file[line_width!= 'ff']:
+    sys.exit("linewidth does not match with data") '''
 while file[mark+1] != '' :
     
     line=file[mark:(mark+line_width)]
