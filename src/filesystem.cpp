@@ -2,7 +2,7 @@
 #define LFS_MBED_RP2040_VERSION_MIN             1001000
 
 #define _LFS_LOGLEVEL_          1
-#define RP2040_FS_SIZE_KB       1536
+#define RP2040_FS_SIZE_KB       1536//1536
 
 #define FORCE_REFORMAT          false
 
@@ -36,11 +36,13 @@ void readFile(const char * path)
     numRead = fread((uint8_t *) &c, sizeof(c), 1, file);
 
     if (numRead)
-      Serial.print(c);
+      Serial.write(c); //not print since we want the serial data.
   }
   
   fclose(file);
 }
+
+
 
 void writeFile(const char * path, const char * message, size_t messageSize) 
 {
@@ -198,6 +200,8 @@ void testFileIO(const char * path)
     Serial.println("- failed to open file for reading");
   }
 }
+
+
 
 void deleteFile(const char * path) 
 {

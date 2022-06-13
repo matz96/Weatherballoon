@@ -23,8 +23,6 @@
 // SFE_UBLOX_GPS myGPS;
 // TinyGPSPlus tinyGPS;
 
-
-
 // void displayInfo()
 // {
 //   Serial.print(F("Location: ")); 
@@ -383,4 +381,4 @@
   
   
   
-// }*/
+// }/*

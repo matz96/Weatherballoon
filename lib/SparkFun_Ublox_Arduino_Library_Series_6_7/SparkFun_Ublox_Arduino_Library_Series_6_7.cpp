@@ -2827,7 +2827,8 @@ boolean SFE_UBLOX_GPS::getPVT(uint16_t maxWait)
 // Update time info (using appropriate call for the chip series)
 boolean SFE_UBLOX_GPS::getTimeData(uint16_t maxWait)
 {
-  return getProtocolVersionHigh(maxWait) < 15 ? getTIMEUTC(maxWait) : getPVT(maxWait);
+  //return getProtocolVersionHigh(maxWait) < 15 ? getTIMEUTC(maxWait) : getPVT(maxWait);
+  return getTIMEUTC(maxWait);
 }
 
 // Update position info (using appropriate call for the chip series)
