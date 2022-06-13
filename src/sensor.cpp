@@ -14,6 +14,7 @@ QWIICMUX myMux;
 
 
 #define DEBUG_STUFF
+//#define SERIAL_LOGGING
 
 #define MAX_TRIES_SENSOR_BEGIN (5)
 #define FORCE_REFORMAT          false
@@ -191,10 +192,12 @@ uint16_t readings[12];
 uint8_t gain;
 bool gainOK = false; //at the beginning we assume that gain is wrong if gain = true it means data is in good dynamic range
 myMux.setPort(sensorNumber); //set the multiplexer to chosen sensor nr
- 
+delay(10); //some delay seems to be in order
+
+ #ifdef SERIAL_LOGGING
  Serial.print("Getting Channels for Sensor: ");
  Serial.println(sensorNumber);
- 
+ #endif
  
  while (!gainOK){ //while gain is notOK repeat the following: 
     
@@ -245,18 +248,18 @@ myMux.setPort(sensorNumber); //set the multiplexer to chosen sensor nr
   }
 
   //now fill the dataString array with values for easier handeling of the data in next step.
-  dataString[0]  = (readings[0] >> 8); //0 = 415nm
-  dataString[1]  = readings[0]; 
-  dataString[2]  = (readings[1] >> 8); //1 = 445nm
-  dataString[3]  = readings[0]; 
-  dataString[4]  = (readings[2] >> 8); //2 = 480nm
-  dataString[5]  = readings[0]; 
-  dataString[6]  = (readings[3] >> 8); //3 = 515nm
-  dataString[7]  = readings[0]; 
-  dataString[8]  = (readings[6] >> 8); //6 = 555nm
-  dataString[9]  = readings[0]; 
-  dataString[10] = (readings[4] >> 8); //4 = clear channel  
-  dataString[11]  = readings[0];   
+  dataString[0]  = (char)(readings[0] >> 8); //0 = 415nm
+  dataString[1]  = (char)readings[0]; 
+  dataString[2]  = (char)(readings[1] >> 8); //1 = 445nm
+  dataString[3]  = (char)readings[1]; 
+  dataString[4]  = (char)(readings[2] >> 8); //2 = 480nm
+  dataString[5]  = (char)readings[2]; 
+  dataString[6]  = (char)(readings[3] >> 8); //3 = 515nm
+  dataString[7]  = (char)readings[3]; 
+  dataString[8]  = (char)(readings[6] >> 8); //6 = 555nm
+  dataString[9]  = (char)readings[6]; 
+  dataString[10] = (char)(readings[4] >> 8); //4 = clear channel  
+  dataString[11]  = (char)readings[4];   
   
   uint8_t nrOfLowChannels = 0;
 
@@ -265,8 +268,10 @@ myMux.setPort(sensorNumber); //set the multiplexer to chosen sensor nr
     uint16_t channelValue = (dataString[2*channel] << 8)|(dataString[2*channel+1]);
     
     if (channelValue > MAX_SENS_VAL && gain > MIN_GAIN){
+      #ifdef SERIAL_LOGGING
       Serial.print("Reducing Gain for Sensor: ");
       Serial.println(sensorNumber);
+      #endif
       gain = reduce_gain();
       break;
     }
@@ -277,8 +282,10 @@ myMux.setPort(sensorNumber); //set the multiplexer to chosen sensor nr
   }
 
   if (nrOfLowChannels == 6 && gain < MAX_GAIN){
+    #ifdef SERIAL_LOGGING
     Serial.print("Doubeling Gain for Sensor: ");
     Serial.println(sensorNumber);
+    #endif
     gain = double_gain();
     continue;
   }

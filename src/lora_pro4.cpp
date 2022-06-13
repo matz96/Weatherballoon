@@ -3,6 +3,8 @@
 #include "lora_pro4.h"
 #include <LoRa.h>
 
+//#define SERIAL_LOGGING
+
 #define LORA_SCK 18
 #define LORA_MISO 16
 #define LORA_MOSI 19
@@ -45,23 +47,30 @@ void lora_send_position_altitude_time(uint32_t latIn, uint32_t longIn, uint32_t 
 
   msg.getAPRSBody()->setData(aprsmsg);
   String data = msg.encode();
+  #ifdef SERIAL_LOGGING
   Serial.print("APRS Message: ");
   Serial.println(data);
-
+  #endif
   LoRa.beginPacket();
+  #ifdef SERIAL_LOGGING
   Serial.println("Packet Begun");
+  #endif
   // Header:
   LoRa.write('<');
   LoRa.write(0xFF);
   LoRa.write(0x01);
-
+  #ifdef SERIAL_LOGGING 
   Serial.println("wrote first 3 bytes");
+  #endif
   // APRS Data:
   LoRa.write((const uint8_t *)data.c_str(), data.length());
+  #ifdef SERIAL_LOGGING
   Serial.println("wrote most data");
-  LoRa.endPacket(true);
+  #endif
+  LoRa.endPacket(true); //true for async mode
+  #ifdef SERIAL_LOGGING
   Serial.println("ended packet");
-
+  #endif
   digitalWrite(LEDFunk,LOW);
 }
 

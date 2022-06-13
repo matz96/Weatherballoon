@@ -6,6 +6,8 @@
 
 #define FORCE_REFORMAT          false
 
+//#define SERIAL_LOGGING
+
 #include <LittleFS_Mbed_RP2040.h>
 #include "filesystem.h"
 
@@ -76,27 +78,37 @@ void writeFile(const char * path, const char * message, size_t messageSize)
 
 void appendFile(const char * path, const char * message, size_t messageSize) 
 {
+  #ifdef SERIAL_LOGGING
   Serial.print("Appending file: "); Serial.print(path);
+  #endif
 
   FILE *file = fopen(path, "a");
   
   if (file) 
   {
+    #ifdef SERIAL_LOGGING
     Serial.println(" => Open OK");
+    #endif
   }
   else
-  {
+  { 
+    #ifdef SERIAL_LOGGING
     Serial.println(" => Open Failed");
+    #endif
     return;
   }
 
   if (fwrite((uint8_t *) message, 1, messageSize, file)) 
   {
+    #ifdef SERIAL_LOGGING
     Serial.println("* Appending OK");
+    #endif
   } 
   else 
   {
+    #ifdef SERIAL_LOGGING
     Serial.println("* Appending failed");
+    #endif
   }
    
   fclose(file);

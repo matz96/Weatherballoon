@@ -1,7 +1,20 @@
-#define SERIAL_LOGGING  // if defined it will print data in loop - if not defined no data is written to prevent hang-up
+//#define SERIAL_LOGGING  // if defined it will print data in loop - if not defined no data is written to prevent hang-up
 
 #define DECLINATION_ANGLE (0.052f) //Deklinatinoswinkel - ~= 3° in Brugg
 #define PRESSURE_AT_SEALEVEL (101780.0f) //Druck vor Flug anpassen. (QFF) Standardwert: 101325.0
+
+#define GPS_FREQUENCY (4) //frequency in Hz
+#define GPS_TIMEOUT_MS (260) //according to frequency
+#define GPS_STANDARD_LAT  (474793720L) // in 10^-7 deg
+#define GPS_STANDARD_LONG (82123430L)  // in 10^-7 deg
+
+#define TEMPOFFSET (70.0f)
+#define MAGOFFSET (70.0f) //in uT
+#define GPSOFFSET (15000000) //in 10^-7 degrees
+#define LOGGING_INTERVAL_MS (1000UL) //how often is data logged to file
+#define LORA_INTERVAL_MS (10000UL) //how often is position sent by lora
+
+#define WRITE_HEADERFILE_BUTTONPRESS_DURATION_MS (5000) //when both buttons were pressed for twice this duration the old file is deleted and a new one is created
 
 #define USE_BMP
 #define USE_MAG
@@ -31,8 +44,12 @@ uint32_t freeSpace;
 #define LOGGING_OFFSET_MAGNETOMETER   (89)
 #define LOGGING_OFFSET_TEMP           (97)
 
-#define PIN_LED_WRITING_TO_FILE (27)
-#define PIN_LED_READING_SENSORS (28)
+#define PIN_LED_WRITING_TO_FILE (27)      //907
+#define PIN_LED_READING_SENSORS (28)      //908
+#define PIN_LED_ABOUT_TO_DELETE_FILE (20) //903
+
+#define PIN_IN_RESET_FILE_0 (2)
+#define PIN_IN_RESET_FILE_1 (3)
 
 #define MM_IN_FOOT (305)  //aproximation for heightconversion from mm to feet mm/305 ~= feet
 
@@ -74,21 +91,26 @@ Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
 //#define WIRE1_SCL       15  // Use GP3 as I2C1 SCL //für Board 15
 //arduino::MbedI2C Wire1(WIRE1_SDA, WIRE1_SCL);
 
-int count = 0;
-
 //SDA1 = GPIO PIN12
 //SCL1 = GPIO PIN13
 //SDA2 = GPIO PIN14
 //SCL2 = GPIO PIN15
 
 bool serialConnected = false;
-unsigned long millisLoggingStart; 
+unsigned long millisLoggingStart;
+int32_t longitudeCenter = GPS_STANDARD_LAT;
+int32_t latitudeCenter = GPS_STANDARD_LONG;
+uint32_t GPSSecondsIntoDayLoggingStart = 4*3600; //4*3600 is 4h into day with this value we never get bigger than a 16bit value
 
 void setup()
 {
  millisLoggingStart = millis();
  Serial.begin(115200);
  delay(4000);
+
+pinMode(PIN_IN_RESET_FILE_0, INPUT_PULLUP);
+pinMode(PIN_IN_RESET_FILE_1, INPUT_PULLUP);
+
  if (Serial){
   serialConnected = true; 
   Serial.println("SerialConnected");
@@ -99,6 +121,8 @@ void setup()
   pinMode(5, OUTPUT);
   digitalWrite(5, HIGH);
  }
+
+
 
  pinMode(PIN_LED_READING_SENSORS, OUTPUT);
  pinMode(PIN_LED_WRITING_TO_FILE, OUTPUT);
@@ -182,7 +206,7 @@ void setup()
 
   Serial.println("GPS serial connected");
   myGPS.setUART1Output(COM_TYPE_UBX);
-  myGPS.setNavigationFrequency(2);
+  myGPS.setNavigationFrequency(GPS_FREQUENCY);
   myGPS.setDynamicModel(DYN_MODEL_AIRBORNE1g);
   delay(500);
   myGPS.saveConfiguration();
@@ -190,15 +214,13 @@ void setup()
   
   #ifdef getPVTmaxWait
   #undef getPVTmaxWait
-  #define getPVTmaxWait (400)
+  #define getPVTmaxWait (GPS_TIMEOUT_MS)
   #endif 
   
   #endif
 
   Wire.begin();
 
-  
-  
   setup_lora();
   Serial.print("InitSensors: ");
 
@@ -208,20 +230,19 @@ void setup()
 }
 
 
-
-
 void loop()
 {
+
   static long lastMillis = millis();
+  static long lastLoraSendMillis = millis();
 
 #ifdef USE_GPS
   
-  static uint32_t myGPSLat, myGPSLong, myGPSAlt, myGPSAltFeet;
-  
+  static int32_t myGPSLat, myGPSLong, myGPSAlt, myGPSAltFeet, myGPSSecondsIntoDay;
   static uint8_t myGPSHour, myGPSMinutes, myGPSSeconds;
 
 
-  if (myGPS.getPOSLLH(550)){
+  if (myGPS.getPOSLLH(GPS_TIMEOUT_MS)){
   
   #ifdef SERIAL_LOGGING 
     Serial.println("NEW GPS Data!");
@@ -229,17 +250,32 @@ void loop()
 
 
   
-  myGPSLat =  myGPS.getLatitude(550);
-  myGPSLong = myGPS.getLongitude(550);
-  myGPSAlt = myGPS.getAltitudeMSL(550);
+  myGPSLat =  myGPS.getLatitude(GPS_TIMEOUT_MS);
+  myGPSLong = myGPS.getLongitude(GPS_TIMEOUT_MS);
+  myGPSAlt = myGPS.getAltitudeMSL(GPS_TIMEOUT_MS);
 
   myGPSAltFeet = myGPSAlt/MM_IN_FOOT;
   
-  myGPSHour = myGPS.getHour(550);
-  myGPSMinutes = myGPS.getMinute(550);
-  myGPSSeconds = myGPS.getSecond(550);
+  myGPSHour = myGPS.getHour(GPS_TIMEOUT_MS);
+  myGPSMinutes = myGPS.getMinute(GPS_TIMEOUT_MS);
+  myGPSSeconds = myGPS.getSecond(GPS_TIMEOUT_MS);
+  
+  //we have to move the Difference to positive space by adding 1.5° (= 15000000 *10^-7 degree)
+  uint16_t myGPSLatDifference = (uint16_t)((myGPSLat - latitudeCenter)+GPSOFFSET)*60*200/10000000; //this way we have 1/200 minutes steps
+  uint16_t myGPSLongDifference = (uint16_t)((myGPSLong - longitudeCenter)+GPSOFFSET)*60*200/10000000;
 
+  sensorStringBuffer[LOGGING_OFFSET_GPS] = (char)(myGPSLatDifference >> 8);
+  sensorStringBuffer[LOGGING_OFFSET_GPS+1] = (char)(myGPSLatDifference);
+  sensorStringBuffer[LOGGING_OFFSET_GPS+2] = (char)(myGPSLongDifference >> 8);
+  sensorStringBuffer[LOGGING_OFFSET_GPS+3] = (char)(myGPSLongDifference);
+  sensorStringBuffer[LOGGING_OFFSET_GPS+4] = (char)(myGPSAlt >> 8);
+  sensorStringBuffer[LOGGING_OFFSET_GPS+5] = (char)(myGPSAlt);
 
+  myGPSSecondsIntoDay = 3600*myGPSHour+60*myGPSMinutes+myGPSSeconds;
+  uint16_t GPSsecondsIntoLogging = myGPSSecondsIntoDay - GPSSecondsIntoDayLoggingStart;
+  sensorStringBuffer[LOGGING_OFFSET_TIME] = (char)(GPSsecondsIntoLogging >> 8); 
+  sensorStringBuffer[LOGGING_OFFSET_TIME+1] = (char)(GPSsecondsIntoLogging);
+  
    uint32_t grad_lat = myGPSLat/10000000;
    float minutes_lat = ((myGPSLat - (grad_lat * 10000000))*60)/10000000.;
   
@@ -266,11 +302,21 @@ void loop()
 #endif
 
 #ifdef USE_TEMP
-  float c = tempsensor.readTempC();
+  float outsideTemp = tempsensor.readTempC();
+  
+  uint16_t outsideTempInt;
+  if (outsideTemp>0){
+   outsideTempInt = (uint16_t)(outsideTemp+0.5+TEMPOFFSET)*100;
+  }
+  else{
+    outsideTempInt = (uint16_t)(outsideTemp-0.5+TEMPOFFSET)*100; 
+  }
+  sensorStringBuffer[LOGGING_OFFSET_TEMP] = (uint8_t)(outsideTempInt >> 8);
+  sensorStringBuffer[LOGGING_OFFSET_TEMP+1] = (uint8_t)(outsideTempInt);
   
   #ifdef SERIAL_LOGGING 
     Serial.print("Temp: "); 
-    Serial.print(c, 4); Serial.println("*C"); 
+    Serial.print(outsideTemp, 4); Serial.println("*C"); 
     Serial.println("");
   #endif
   /* Get a new sensor event */ 
@@ -279,8 +325,24 @@ void loop()
   
   #ifdef USE_BMP
     int32_t bmpPressure  = bmp.readPressure();
-    float bmpTemperature = bmp.readTemperature();
-    float bmpAltitude = bmp.readAltitude(PRESSURE_AT_SEALEVEL);
+    float   bmpTemperature = bmp.readTemperature();
+    float   bmpAltitude = bmp.readAltitude(PRESSURE_AT_SEALEVEL);
+    
+    uint16_t bmpAltitudeInt = (uint16_t)bmpAltitude + 0.5;
+
+    uint16_t bmpTempInt;
+  if (bmpTemperature>0){
+    bmpTempInt = (uint16_t)(bmpTemperature+0.5+TEMPOFFSET)*100;
+  }
+  else{
+    bmpTempInt = (uint16_t)(bmpTemperature-0.5+TEMPOFFSET)*100; 
+  }
+  sensorStringBuffer[LOGGING_OFFSET_BAROMETER]   = (uint8_t)(bmpPressure/10 >> 8);
+  sensorStringBuffer[LOGGING_OFFSET_BAROMETER+1] = (uint8_t)(bmpPressure/10);
+  sensorStringBuffer[LOGGING_OFFSET_BAROMETER+2] = (uint8_t)(bmpTempInt >> 8);
+  sensorStringBuffer[LOGGING_OFFSET_BAROMETER+3] = (uint8_t)(bmpTempInt);
+  sensorStringBuffer[LOGGING_OFFSET_BAROMETER+4] = (uint8_t)(bmpAltitudeInt >> 8);
+  sensorStringBuffer[LOGGING_OFFSET_BAROMETER+5] = (uint8_t)(bmpAltitudeInt);
 
     #ifdef SERIAL_LOGGING 
     Serial.print("Pressure:    ");
@@ -302,7 +364,39 @@ void loop()
     float magX = event.magnetic.x;
     float magY = event.magnetic.y;
     float magZ = event.magnetic.z;
+
+    //magnetics are adjusted by adding 70uT to the values
+    uint16_t magXint, magYint, magZint;
     
+    if (magX>0){
+      magXint = (uint16_t)(magX+0.5+MAGOFFSET)*100; //in10nT
+    }
+    else{
+      magXint = (uint16_t)(magX-0.5+MAGOFFSET)*100; //in 10nT 
+    }
+
+    if (magY>0){
+      magYint = (uint16_t)(magY+0.5+MAGOFFSET)*100; //in10nT
+    }
+    else{
+      magYint = (uint16_t)(magY-0.5+MAGOFFSET)*100; //in 10nT 
+    }
+
+    if (magZ>0){
+      magZint = (uint16_t)(magZ+0.5+MAGOFFSET)*100; //in10nT
+    }
+    else{
+      magZint = (uint16_t)(magZ-0.5+MAGOFFSET)*100; //in 10nT 
+    }
+    
+    
+    sensorStringBuffer[LOGGING_OFFSET_MAGNETOMETER]   = (uint8_t)(magXint >> 8);
+    sensorStringBuffer[LOGGING_OFFSET_MAGNETOMETER+1] = (uint8_t)(magXint);
+    sensorStringBuffer[LOGGING_OFFSET_MAGNETOMETER+2] = (uint8_t)(magYint >> 8);
+    sensorStringBuffer[LOGGING_OFFSET_MAGNETOMETER+3] = (uint8_t)(magYint);
+    sensorStringBuffer[LOGGING_OFFSET_MAGNETOMETER+4] = (uint8_t)(magZint >> 8);
+    sensorStringBuffer[LOGGING_OFFSET_MAGNETOMETER+5] = (uint8_t)(magZint);
+
     // Hold the module so that Z is pointing 'up' and you can measure the heading with x&y
     // Calculate heading when the magnetometer is level, then correct for signs of axis.
     float heading = atan2(event.magnetic.y, event.magnetic.x);
@@ -321,6 +415,11 @@ void loop()
     
     // Convert radians to degrees for readability.
     float headingDegrees = heading * 180/PI; 
+
+    uint16_t headingDegreesInt = (uint16_t)(headingDegrees+0.5)*100;
+
+    sensorStringBuffer[LOGGING_OFFSET_MAGNETOMETER+6]   = (uint8_t)(headingDegreesInt >> 8);
+    sensorStringBuffer[LOGGING_OFFSET_MAGNETOMETER+7] = (uint8_t)(headingDegreesInt);
     
     #ifdef SERIAL_LOGGING
       /* Display the results (magnetic vector values are in micro-Tesla (uT)) */
@@ -331,14 +430,10 @@ void loop()
     #endif
   #endif
   
-  static uint16_t counterToWrite = 0;
-  
-  if (lastMillis + 1000UL <= millis()){
-   
-   
+   //read the sensors now and save to sensorStringBuffer
+   int8_t Gain;
    digitalWrite(PIN_LED_READING_SENSORS, HIGH);
    
-   int8_t Gain;
    for (uint8_t sensorToRead = 0; sensorToRead<6; sensorToRead++){
 
    uint8_t gainByteOffset = sensorToRead/2; //how many gain bytes were written before current iteration 
@@ -351,29 +446,91 @@ void loop()
    Gain = readSensor(sensorToRead, &sensorStringBuffer[LOGGING_OFFSET_SPECTRAL+(12*sensorToRead)+gainByteOffset], &Wire);
    
    sensorStringBuffer[currentGainByte] = (Gain << (sensorToRead%2)*8);
+  }
+  digitalWrite(PIN_LED_READING_SENSORS, LOW);
 
-   }
+
+  if (lastMillis + LOGGING_INTERVAL_MS <= millis()){
    
-   //Serial.println(Gain); 
-
-   counterToWrite++;
-   lastMillis = millis();
-   digitalWrite(PIN_LED_READING_SENSORS, LOW);
-
-  //  sensorStringBuffer[97]= counterToWrite;
-  //  sensorStringBuffer[96]=(counterToWrite>>8);
+      lastMillis = millis();
+   
    digitalWrite(PIN_LED_WRITING_TO_FILE, HIGH);
    appendFile(filename, sensorStringBuffer, BUFFERLEN);
    digitalWrite(PIN_LED_WRITING_TO_FILE, LOW);
-
-  
-  count++;
-  if(count == 10){
+   
+   }
+  if (lastLoraSendMillis + LORA_INTERVAL_MS <= millis()){
     lora_send_position_altitude_time(myGPSLat, myGPSLong, myGPSAltFeet, myGPSHour, myGPSMinutes, myGPSSeconds);
-    count = 0; 
   }
+   
+
+//------------------ reset of file: 
+  
+  static bool wroteHeader = false;
+
+  static long lastMillisButton0Pushed = millis();
+  static long lastMillisButton1Pushed = millis();
+  static long lastMillisButtons01Pushed = millis();
+
+  if (!digitalRead(PIN_IN_RESET_FILE_0)){ 
+    //button 0 gedrückt
+  }
+  else{
+    lastMillisButton0Pushed = millis();
   }
 
+  if (!digitalRead(PIN_IN_RESET_FILE_1)){ 
+    //button 1 gedrückt
+  }
+  else{
+    lastMillisButton1Pushed = millis();
+  }
+
+  if (!digitalRead(PIN_IN_RESET_FILE_0) && !digitalRead(PIN_IN_RESET_FILE_1)){ 
+    //buttons 0 und 1 gedrückt
+  }
+  else{
+    lastMillisButtons01Pushed = millis();
+  }
   
-  //Serial.flush();
+  static long lastMillisLEDBlink = millis();
+  
+  if (lastMillisButtons01Pushed + WRITE_HEADERFILE_BUTTONPRESS_DURATION_MS < millis()){
+    //buttons were pressed for at least WRITE_HEADERFILE...MS
+    
+    if (lastMillisLEDBlink + 200 < millis()){
+      lastMillisLEDBlink = millis();
+      digitalWrite(PIN_LED_ABOUT_TO_DELETE_FILE, !digitalRead(PIN_LED_ABOUT_TO_DELETE_FILE));
+    }
+    if (lastMillisButtons01Pushed + 2*WRITE_HEADERFILE_BUTTONPRESS_DURATION_MS < millis() && !wroteHeader){
+      //buttons pushed for twice WRITEHEADERFILE_BUTTON....MS
+      //create new file.
+      Serial.println("NEW FILE CREATED!!!!");
+      wroteHeader = true;
+      readFile(filename);
+
+      deleteFile(filename);
+      char test_message[] = "HI:"; 
+      char start_message[] = "NEW FILE CREATED ---------\n";
+      writeFile(filename,test_message,sizeof(test_message));
+      appendFile(filename,start_message,sizeof(start_message));
+      
+
+      GPSSecondsIntoDayLoggingStart = myGPSSecondsIntoDay;
+      latitudeCenter = myGPSLat;
+      longitudeCenter = myGPSLong;
+    }
+  }
+  else{
+    lastMillisLEDBlink = millis();
+    digitalWrite(PIN_LED_ABOUT_TO_DELETE_FILE, LOW);
+    wroteHeader = false;
+  }
+
+ 
+  
+ 
+
+
+
 }
