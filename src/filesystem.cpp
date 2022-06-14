@@ -230,7 +230,7 @@ void deleteFile(const char * path)
   }
 }
 
-
+void printHeader
 
 void printLine()
 {
@@ -261,21 +261,7 @@ void setupLFS()
     return;
   }
 
-  /* char fileName1[] = MBED_LITTLEFS_FILE_PREFIX "/helloTESTITEST.txt";
-  //char fileName2[] = MBED_LITTLEFS_FILE_PREFIX "/hello2.txt";
-  
-  char message[]  = "Hello World!";
-  
-  printLine();
-  writeFile(fileName1, message, sizeof(message));
-  printLine();
-  readFile(fileName1);
-  printLine(); */
 
-  /* appendFile(fileName1, message, sizeof(message));
-  printLine();
-  readFile(fileName1);
-  printLine(); */
 
 
 }
