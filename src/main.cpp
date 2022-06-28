@@ -1,5 +1,6 @@
 //#define SERIAL_LOGGING  // if defined it will print data in loop - if not defined no data is written to prevent hang-up
 
+//change this Values to represent starting conditions
 #define DECLINATION_ANGLE (0.052f) //Deklinatinoswinkel - ~= 3° in Brugg
 #define PRESSURE_AT_SEALEVEL (101780.0f) //Druck vor Flug anpassen. (QFF) Standardwert: 101325.0
 
@@ -8,6 +9,7 @@
 #define GPS_STANDARD_LAT  (474793720L) // in 10^-7 deg
 #define GPS_STANDARD_LONG (82123430L)  // in 10^-7 deg
 
+//some values will have to be corrected to be positive values
 #define TEMPOFFSET (70.0f)
 #define MAGOFFSET (70.0f) //in uT
 #define GPSOFFSET (15000000) //in 10^-7 degrees
@@ -30,13 +32,14 @@
 #include <Adafruit_Sensor.h>
 #include <filesystem.h>
 
-
+//logging file settings
 #define BUFFERLEN (100)
 
 char sensorStringBuffer[BUFFERLEN]; //our DataString is exactly 100 bytes long (with a FF at the end)
 const char filename[] = "/littlefs/log.txt";
-uint32_t freeSpace; 
+uint32_t freeSpace; //eventually use this to see if enough space is available. 
 
+//offsets for buffer data
 #define LOGGING_OFFSET_TIME           (0)
 #define LOGGING_OFFSET_SPECTRAL       (2)
 #define LOGGING_OFFSET_GPS            (77)
@@ -85,17 +88,7 @@ Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
   TinyGPSPlus tinyGPS;
 #endif
 
-// default "Wire" object: SDA = GP4, SCL = GP5, I2C0 peripheral
-// our new wire object:
-//#define WIRE1_SDA       14  // Use GP2 as I2C1 SDA //für Board 14
-//#define WIRE1_SCL       15  // Use GP3 as I2C1 SCL //für Board 15
-//arduino::MbedI2C Wire1(WIRE1_SDA, WIRE1_SCL);
-
-//SDA1 = GPIO PIN12
-//SCL1 = GPIO PIN13
-//SDA2 = GPIO PIN14
-//SCL2 = GPIO PIN15
-
+//setup global variables
 bool serialConnected = false;
 unsigned long millisLoggingStart;
 int32_t longitudeCenter = GPS_STANDARD_LAT;
@@ -104,7 +97,7 @@ uint32_t GPSSecondsIntoDayLoggingStart = 4*3600; //4*3600 is 4h into day with th
 
 void setup()
 {
- millisLoggingStart = millis();
+ millisLoggingStart = millis(); 
  Serial.begin(115200);
  delay(4000);
 
@@ -117,12 +110,11 @@ pinMode(PIN_IN_RESET_FILE_1, INPUT_PULLUP);
   pinMode(6, OUTPUT);
   digitalWrite(6, HIGH);
  }
+
  else{
   pinMode(5, OUTPUT);
   digitalWrite(5, HIGH);
  }
-
-
 
  pinMode(PIN_LED_READING_SENSORS, OUTPUT);
  pinMode(PIN_LED_WRITING_TO_FILE, OUTPUT);
@@ -140,12 +132,13 @@ pinMode(PIN_IN_RESET_FILE_1, INPUT_PULLUP);
   
   setupLFS();
 
-  //deleteFile(filename);
+
   char test_message[] = "start\n"; 
   char start_message[] = "start of new data:\n";
+  //deleteFile(filename); //uncomment this lines, upload and comment again and upload again for new file 
   //writeFile(filename,test_message,sizeof(test_message));
-  appendFile(filename,start_message,sizeof(start_message));
-  
+ 
+  appendFile(filename,start_message,sizeof(start_message)); 
   readFile(filename); 
   
 
