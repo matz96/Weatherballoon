@@ -35,26 +35,38 @@ def set_gain(gain):
 def append_dict(line,name,long):
     value = line[0:long]
     line=line[long:len(line)]
-    row[name]=int(value)    
+    out=0
+    for i in range(long):
+        out=out+int(format(value[i],'b'))
+    row[name]=out    
     return line 
+
+def sens_val(value):
+    out=0
+    for i in range(2):
+        out=out+int(format(value[i],'b'))
+    #print(out)
+    return out
 
 def sensor_out(line,sensor_nr):
     gain_pos = (2*12)
-    len = gain_pos+1
+    
     Sensor1 = []
     Sensor2 = []
-    gains=bin(line[len])
+    gains=format(line[gain_pos], '08b')
     gain1=set_gain(int(gains[0:4]))
     gain2=set_gain(int(gains[4:8]))
     for i in range(6):
+        value = 0
         value = line[0:2]
         line=line[2:len(line)]
-        value=(int(value))*gain1
+        value=(sens_val(value))*gain1
         Sensor1.append(value)
     for i in range(6):
+        value = 0
         value = line[0:2]
         line=line[2:len(line)]
-        value=(int(value))*gain2
+        value=(sens_val(value))*gain2
         Sensor2.append(value)
     sens = "Sensor{}"
     row[sens.format(sensor_nr)]=Sensor1  
@@ -64,9 +76,11 @@ def sensor_out(line,sensor_nr):
 
 def get_data(item):
     ar=[] 
-    for i in len(data):
+    i=0
+    for name in data:
         line_name = "line{}"
-        ar.append=data[line_name.format(line_name)][item]
+        ar.append=data[line_name.format(i)][item]
+        i=i+1
     return ar
 
 
@@ -107,8 +121,8 @@ line_width = 100
 line_nr=0
 ''' if file[line_width!= 'ff']:
     sys.exit("linewidth does not match with data") '''
-while file[mark+1] != '' :
-    
+#while file[mark+1] != '' :
+while line_nr<10:   
     line=file[mark:(mark+line_width)]
     append_dict(line,"time",1)#timestamp
     
@@ -120,10 +134,11 @@ while file[mark+1] != '' :
         
     line_name = "line{}"
     data[line_name.format(line_nr)]=row
+    print(row)
     row.clear()   
     mark=mark+line_width
-    line_nr=+1
-
+    line_nr=line_nr+1
+    
 timestr = get_data("time")
 gps_height = get_data("GPS_height")
 bar_height = get_data("Bar_height")
